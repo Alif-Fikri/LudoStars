@@ -1,0 +1,111 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+class AdManager {
+  AdManager._();
+  static final AdManager instance = AdManager._();
+
+  static String get _interstitialUnitId => Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/1033173712'
+      : 'ca-app-pub-3940256099942544/4411468910';
+
+  static String get _rewardedUnitId => Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/5224354917'
+      : 'ca-app-pub-3940256099942544/1712485313';
+
+  static String get bannerUnitId => Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/6300978111'
+      : 'ca-app-pub-3940256099942544/2934735716';
+
+  InterstitialAd? _interstitial;
+  RewardedAd? _rewarded;
+  bool _initialized = false;
+
+  bool get supported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  Future<void> init() async {
+    if (!supported || _initialized) return;
+    _initialized = true;
+    await MobileAds.instance.initialize();
+    _loadInterstitial();
+    _loadRewarded();
+  }
+
+  void _loadInterstitial() {
+    if (!supported) return;
+    InterstitialAd.load(
+      adUnitId: _interstitialUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) => _interstitial = ad,
+        onAdFailedToLoad: (_) => _interstitial = null,
+      ),
+    );
+  }
+
+  void _loadRewarded() {
+    if (!supported) return;
+    RewardedAd.load(
+      adUnitId: _rewardedUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) => _rewarded = ad,
+        onAdFailedToLoad: (_) => _rewarded = null,
+      ),
+    );
+  }
+
+  void showInterstitial({VoidCallback? onDismissed}) {
+    final ad = _interstitial;
+    if (!supported || ad == null) {
+      onDismissed?.call();
+      return;
+    }
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _interstitial = null;
+        _loadInterstitial();
+        onDismissed?.call();
+      },
+      onAdFailedToShowFullScreenContent: (ad, _) {
+        ad.dispose();
+        _interstitial = null;
+        _loadInterstitial();
+        onDismissed?.call();
+      },
+    );
+    ad.show();
+    _interstitial = null;
+  }
+
+  void showRewarded({required VoidCallback onReward}) {
+    final ad = _rewarded;
+    if (!supported || ad == null) {
+      onReward();
+      if (supported) _loadRewarded();
+      return;
+    }
+    var earned = false;
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _rewarded = null;
+        _loadRewarded();
+        if (earned) onReward();
+      },
+      onAdFailedToShowFullScreenContent: (ad, _) {
+        ad.dispose();
+        _rewarded = null;
+        _loadRewarded();
+      },
+    );
+    ad.show(onUserEarnedReward: (ad, reward) => earned = true);
+    _rewarded = null;
+  }
+}
