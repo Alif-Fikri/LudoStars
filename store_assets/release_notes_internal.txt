@@ -1,0 +1,16 @@
+Internal testing build (v1.0.0) — first release for internal QA.
+
+This build is for internal testing only, not a public release.
+
+What to test:
+- Play vs Computer (AI) mode
+- Local pass-and-play multiplayer (2-4 players)
+- Dice roll, token movement, and win conditions
+- Ads (interstitial, rewarded, banner) — currently using Google test ad IDs
+- App icon, splash screen, and overall UI/UX on your device
+
+Known limitations:
+- Ads are test ads (not production AdMob IDs yet)
+- No online/network multiplayer — local device only
+
+Please report any crashes, visual glitches, or gameplay bugs.
