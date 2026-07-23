@@ -10,6 +10,7 @@ import '../l10n/strings.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../widgets/dice_widget.dart';
 import '../widgets/glossy_button.dart';
+import '../widgets/win_dialog.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, required this.game});
@@ -42,49 +43,18 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showWinnerDialog(PlayerColor winner) {
-    showDialog<void>(
+    showGeneralDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: Text(tr.gameOver),
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: winner.color,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(child: Text(tr.wins(winner.label))),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              GameSession.instance.clear();
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: Text(tr.menu),
-          ),
-          FilledButton(
-            onPressed: () {
-              final fresh = GameSession.instance.startNew(
-                players: _game.players,
-                aiPlayers: _game.aiPlayers,
-              );
-              Navigator.of(context).pop();
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => GameScreen(game: fresh)),
-              );
-            },
-            child: Text(tr.playAgain),
-          ),
-        ],
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (_, _, _) => WinDialog(
+        winner: winner,
+        onMenu: () {
+          GameSession.instance.clear();
+          Navigator.of(context).pop();
+          Navigator.of(context).pop();
+        },
       ),
     );
   }
