@@ -129,6 +129,14 @@ class LudoGame extends FlameGame {
       return;
     }
 
+    if (!isAiTurn && movable.length == 1) {
+      _clearHighlights();
+      _message = tr.rolledTap(dice);
+      _publish();
+      _moveToken(movable.first);
+      return;
+    }
+
     _highlight(movable);
     _message = isAiTurn
         ? tr.botMoves(currentPlayer.label, dice)
