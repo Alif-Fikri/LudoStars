@@ -15,6 +15,9 @@ class S {
   String get choosePlayerColors =>
       id ? 'Pilih warna pemain (min. 2)' : 'Choose player colors (min. 2)';
   String get playerCount => id ? 'Jumlah pemain' : 'Number of players';
+  String get yourName => id ? 'Nama kamu' : 'Your name';
+  String get playerNames => id ? 'Nama pemain' : 'Player names';
+  String rank(int place) => id ? 'Peringkat $place' : 'Rank $place';
   String get newGame => id ? 'MULAI BARU' : 'NEW GAME';
   String get start => id ? 'MULAI MAIN' : 'START';
 

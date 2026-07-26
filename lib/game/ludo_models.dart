@@ -34,6 +34,7 @@ class LudoUiState {
   final String message;
   final PlayerColor? winner;
   final Map<PlayerColor, int> finishedCounts;
+  final List<PlayerColor> ranking;
 
   const LudoUiState({
     required this.currentPlayer,
@@ -46,5 +47,6 @@ class LudoUiState {
     required this.message,
     required this.winner,
     required this.finishedCounts,
+    required this.ranking,
   });
 }

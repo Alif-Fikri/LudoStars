@@ -25,6 +25,13 @@ class _MenuScreenState extends State<MenuScreen> {
   PlayerColor _myColor = PlayerColor.red;
   int _count = 4;
   final Set<PlayerColor> _localColors = {...PlayerColor.values};
+  final Map<PlayerColor, TextEditingController> _nameControllers = {
+    for (final c in PlayerColor.values) c: TextEditingController(),
+  };
+
+  Map<PlayerColor, String> get _playerNames => {
+    for (final e in _nameControllers.entries) e.key: e.value.text,
+  };
 
   @override
   void initState() {
@@ -39,6 +46,9 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   void dispose() {
     AppLang.instance.code.removeListener(_onLang);
+    for (final c in _nameControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -54,12 +64,24 @@ class _MenuScreenState extends State<MenuScreen> {
 
   bool get _canStart => _vsComputer || _localColors.length >= 2;
 
-  void _start() {
+  Future<void> _start() async {
+    final proceed = await _showNameDialog(
+      context,
+      label: _vsComputer ? tr.yourName : tr.playerNames,
+      colors: _vsComputer ? [_myColor] : _buildPlayers(),
+      controllers: _nameControllers,
+    );
+    if (proceed != true || !mounted) return;
+
     final players = _buildPlayers();
     final ai = _vsComputer
         ? players.where((c) => c != _myColor).toSet()
         : <PlayerColor>{};
-    final game = GameSession.instance.startNew(players: players, aiPlayers: ai);
+    final game = GameSession.instance.startNew(
+      players: players,
+      aiPlayers: ai,
+      playerNames: _playerNames,
+    );
     _open(game);
   }
 
@@ -79,11 +101,16 @@ class _MenuScreenState extends State<MenuScreen> {
     final hasActive = GameSession.instance.hasActiveGame;
     return Scaffold(
       backgroundColor: const Color(0xFF2E9BD6),
-      body: Column(
-        children: [
-          Expanded(child: _buildHero()),
-          _buildSheet(hasActive),
-        ],
+      resizeToAvoidBottomInset: false,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Column(
+          children: [
+            Expanded(child: _buildHero()),
+            _buildSheet(hasActive),
+          ],
+        ),
       ),
     );
   }
@@ -110,7 +137,9 @@ class _MenuScreenState extends State<MenuScreen> {
                   child: _SettingsButton(onTap: () => showSettings(context)),
                 ),
                 Center(
-                  child: Column(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const AppLogo(size: 92),
@@ -159,6 +188,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         ),
                       ),
                     ],
+                    ),
                   ),
                 ),
               ],
@@ -193,7 +223,7 @@ class _MenuScreenState extends State<MenuScreen> {
         ),
         child: SafeArea(
           top: false,
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(22, 24, 22, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -231,20 +261,9 @@ class _MenuScreenState extends State<MenuScreen> {
                             const SizedBox(height: 22),
                             _sectionLabel(tr.playerCount),
                             const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [2, 3, 4].map((n) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                  ),
-                                  child: _CountButton(
-                                    count: n,
-                                    selected: n == _count,
-                                    onTap: () => setState(() => _count = n),
-                                  ),
-                                );
-                              }).toList(),
+                            _CountSegment(
+                              count: _count,
+                              onChanged: (n) => setState(() => _count = n),
                             ),
                           ],
                         )
@@ -580,55 +599,249 @@ class _ColorPicker extends StatelessWidget {
   }
 }
 
-class _CountButton extends StatelessWidget {
-  const _CountButton({
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
+Future<bool?> _showNameDialog(
+  BuildContext context, {
+  required String label,
+  required List<PlayerColor> colors,
+  required Map<PlayerColor, TextEditingController> controllers,
+}) {
+  return showDialog<bool>(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (ctx) => GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => FocusScope.of(ctx).unfocus(),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 34),
+              padding: const EdgeInsets.fromLTRB(22, 46, 22, 22),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6F8FB),
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 26,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ShaderMask(
+                    shaderCallback: (rect) => const LinearGradient(
+                      colors: [Color(0xFF4A90E2), Color(0xFF2D6FB3)],
+                    ).createShader(rect),
+                    child: Text(
+                      label.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  ...colors.map((c) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            margin: const EdgeInsets.only(right: 12),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [c.color, c.darkColor],
+                              ),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: c.color.withValues(alpha: 0.5),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: controllers[c],
+                              maxLength: 14,
+                              textInputAction: TextInputAction.next,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                counterText: '',
+                                hintText: c.label,
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(
+                                    color: c.color.withValues(alpha: 0.35),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: BorderSide(
+                                    color: c.color,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GlossyButton(
+                          color: Colors.amber,
+                          icon: Icons.play_arrow,
+                          label: tr.start,
+                          onTap: () => Navigator.of(ctx).pop(true),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF36D1DC), Color(0xFF4A90E2)],
+                ),
+                border: Border.all(color: Colors.white, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withValues(alpha: 0.5),
+                    blurRadius: 14,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.badge_rounded,
+                color: Colors.white,
+                size: 32,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _CountSegment extends StatelessWidget {
+  const _CountSegment({required this.count, required this.onChanged});
+
+  static const _options = [2, 3, 4];
 
   final int count;
-  final bool selected;
-  final VoidCallback onTap;
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 56,
-        height: 56,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          gradient: selected
-              ? const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFFFD54F), Color(0xFFFFB300)],
-                )
-              : null,
-          color: selected ? null : const Color(0xFFE9EEF3),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: Colors.amber.withValues(alpha: 0.45),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          '$count',
-          style: TextStyle(
-            color: selected ? Colors.black87 : const Color(0xFF7A8A9A),
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const pad = 5.0;
+        final segW = (constraints.maxWidth - pad * 2) / _options.length;
+        final index = _options.indexOf(count).clamp(0, _options.length - 1);
+        return Container(
+          height: 56,
+          padding: const EdgeInsets.all(pad),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE9EEF3),
+            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-      ),
+          child: Stack(
+            children: [
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment(-1 + index * (2 / (_options.length - 1)), 0),
+                child: Container(
+                  width: segW,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFFFD54F), Color(0xFFFFB300)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withValues(alpha: 0.45),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Row(
+                children: _options.map((n) {
+                  final selected = n == count;
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onChanged(n),
+                      child: Center(
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOut,
+                          style: TextStyle(
+                            color: selected
+                                ? Colors.black87
+                                : const Color(0xFF7A8A9A),
+                            fontSize: selected ? 22 : 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          child: Text('$n'),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -32,29 +32,34 @@ class _GameScreenState extends State<GameScreen> {
     _game.onGameOver = _handleGameOver;
   }
 
-  void _handleGameOver(PlayerColor winner) {
+  void _handleGameOver(List<PlayerColor> ranking) {
     if (_gameOverHandled) return;
     _gameOverHandled = true;
     AdManager.instance.showInterstitial(
       onDismissed: () {
-        if (mounted) _showWinnerDialog(winner);
+        if (mounted) _showWinnerDialog(ranking);
       },
     );
   }
 
-  void _showWinnerDialog(PlayerColor winner) {
+  void _showWinnerDialog(List<PlayerColor> ranking) {
     showGeneralDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (_, _, _) => WinDialog(
-        winner: winner,
-        onMenu: () {
-          GameSession.instance.clear();
-          Navigator.of(context).pop();
-          Navigator.of(context).pop();
-        },
+      pageBuilder: (_, _, _) => Material(
+        type: MaterialType.transparency,
+        child: WinDialog(
+          winner: ranking.first,
+          ranking: ranking,
+          nameOf: _game.nameOf,
+          onMenu: () {
+            GameSession.instance.clear();
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+        ),
       ),
     );
   }
@@ -83,6 +88,7 @@ class _GameScreenState extends State<GameScreen> {
                 children: [
                   _Header(
                     state: state,
+                    game: _game,
                     onExit: () => Navigator.of(context).maybePop(),
                   ),
                   Expanded(
@@ -135,8 +141,13 @@ class _GameScreenState extends State<GameScreen> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.state, required this.onExit});
+  const _Header({
+    required this.state,
+    required this.game,
+    required this.onExit,
+  });
   final LudoUiState? state;
+  final LudoGame game;
   final VoidCallback onExit;
 
   @override
@@ -145,10 +156,30 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Column(
         children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: onExit,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (state != null) Expanded(child: _Scoreboard(state: state!)),
+            ],
+          ),
           if (state != null) ...[
-            _Scoreboard(state: state!),
             const SizedBox(height: 10),
-            _TurnBanner(state: state!, onExit: onExit),
+            _TurnBanner(state: state!, game: game),
           ],
         ],
       ),
@@ -212,9 +243,9 @@ class _Scoreboard extends StatelessWidget {
 }
 
 class _TurnBanner extends StatelessWidget {
-  const _TurnBanner({required this.state, required this.onExit});
+  const _TurnBanner({required this.state, required this.game});
   final LudoUiState state;
-  final VoidCallback onExit;
+  final LudoGame game;
 
   @override
   Widget build(BuildContext context) {
@@ -246,22 +277,6 @@ class _TurnBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: onExit,
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.22),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           CircleAvatar(
             radius: 19,
             backgroundColor: Colors.white,
@@ -278,7 +293,7 @@ class _TurnBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  over ? tr.finished : tr.turnOf(p.label),
+                  over ? tr.finished : tr.turnOf(game.nameOf(p)),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 17,

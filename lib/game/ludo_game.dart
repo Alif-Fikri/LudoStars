@@ -6,18 +6,28 @@ import 'package:flutter/material.dart';
 import '../audio/audio_controller.dart';
 import '../l10n/strings.dart';
 import 'components/board_component.dart';
+import 'components/token_burst_component.dart';
 import 'components/token_component.dart';
 import 'ludo_constants.dart';
 import 'ludo_models.dart';
 
 class LudoGame extends FlameGame {
-  LudoGame({required this.players, this.aiPlayers = const {}})
-    : assert(players.length >= 2 && players.length <= 4);
+  LudoGame({
+    required this.players,
+    this.aiPlayers = const {},
+    this.playerNames = const {},
+  }) : assert(players.length >= 2 && players.length <= 4);
 
   final List<PlayerColor> players;
   final Set<PlayerColor> aiPlayers;
+  final Map<PlayerColor, String> playerNames;
 
-  void Function(PlayerColor winner)? onGameOver;
+  String nameOf(PlayerColor color) {
+    final custom = playerNames[color]?.trim();
+    return custom != null && custom.isNotEmpty ? custom : color.label;
+  }
+
+  void Function(List<PlayerColor> ranking)? onGameOver;
 
   final ValueNotifier<LudoUiState?> uiState = ValueNotifier(null);
 
@@ -32,6 +42,8 @@ class LudoGame extends FlameGame {
   bool _rerollUsed = false;
   String _message = '';
   PlayerColor? winner;
+
+  final List<PlayerColor> ranking = [];
 
   static const int _aiThinkMs = 850;
   static const int _moveCellMs = 270;
@@ -94,8 +106,8 @@ class LudoGame extends FlameGame {
   }
 
   String _turnPrompt() => isAiTurn
-      ? tr.thinking(currentPlayer.label)
-      : tr.turnRoll(currentPlayer.label);
+      ? tr.thinking(nameOf(currentPlayer))
+      : tr.turnRoll(nameOf(currentPlayer));
 
   void rollDice() {
     if (phase != GamePhase.roll || _busy) return;
@@ -121,8 +133,8 @@ class LudoGame extends FlameGame {
     if (movable.isEmpty) {
       _clearHighlights();
       _message = dice == 6
-          ? tr.sixNoMove(currentPlayer.label)
-          : tr.noMove(currentPlayer.label, dice);
+          ? tr.sixNoMove(nameOf(currentPlayer))
+          : tr.noMove(nameOf(currentPlayer), dice);
       _busy = true;
       _publish();
       _delayThen(_passTurn);
@@ -139,7 +151,7 @@ class LudoGame extends FlameGame {
 
     _highlight(movable);
     _message = isAiTurn
-        ? tr.botMoves(currentPlayer.label, dice)
+        ? tr.botMoves(nameOf(currentPlayer), dice)
         : tr.rolledTap(dice);
     _publish();
 
@@ -153,7 +165,7 @@ class LudoGame extends FlameGame {
     dice = 0;
     phase = GamePhase.roll;
     _clearHighlights();
-    _message = tr.freeReroll(currentPlayer.label);
+    _message = tr.freeReroll(nameOf(currentPlayer));
     _publish();
   }
 
@@ -231,23 +243,29 @@ class LudoGame extends FlameGame {
 
     _syncTokens(animate: true);
 
-    final extraTurn = dice == 6 || captured || finished;
-    final won = tokens[token.color]!.every((t) => t.isFinished);
+    final justFinished =
+        !ranking.contains(token.color) &&
+        tokens[token.color]!.every((t) => t.isFinished);
+    if (justFinished) ranking.add(token.color);
+    final gameFinished = ranking.length == players.length;
+    final extraTurn = !justFinished && (dice == 6 || captured || finished);
+
     if (captured) {
       AudioController.instance.capture();
-      _message = tr.captured(currentPlayer.label);
+      _message = tr.captured(nameOf(currentPlayer));
     } else if (finished) {
-      _message = tr.reachedHome(currentPlayer.label);
+      _message = tr.reachedHome(nameOf(currentPlayer));
+      _spawnHomeBurst(token);
     }
     _publish();
 
     _delayMs(captured ? 550 : 0, () {
-      if (won) {
-        _gameOver(token.color);
+      if (gameFinished) {
+        _finishGame();
       } else if (extraTurn) {
         phase = GamePhase.roll;
         dice = 0;
-        _message = tr.anotherTurn(currentPlayer.label);
+        _message = tr.anotherTurn(nameOf(currentPlayer));
         _busy = false;
         _publish();
         _scheduleAiTurn();
@@ -258,7 +276,9 @@ class LudoGame extends FlameGame {
   }
 
   void _passTurn() {
-    _currentIndex = (_currentIndex + 1) % players.length;
+    do {
+      _currentIndex = (_currentIndex + 1) % players.length;
+    } while (ranking.contains(currentPlayer));
     _consecutiveSixes = 0;
     _rerollUsed = false;
     dice = 0;
@@ -270,15 +290,15 @@ class LudoGame extends FlameGame {
     _scheduleAiTurn();
   }
 
-  void _gameOver(PlayerColor w) {
-    winner = w;
+  void _finishGame() {
+    winner = ranking.first;
     phase = GamePhase.gameOver;
     dice = 0;
     AudioController.instance.win();
-    _message = tr.wins(w.label);
+    _message = tr.wins(nameOf(winner!));
     _busy = false;
     _publish();
-    onGameOver?.call(w);
+    onGameOver?.call(List.unmodifiable(ranking));
   }
 
   void _scheduleAiTurn() {
@@ -343,6 +363,11 @@ class LudoGame extends FlameGame {
   TokenComponent _componentFor(Token t) =>
       _tokenComponents.firstWhere((c) => c.token == t);
 
+  void _spawnHomeBurst(Token token) {
+    final pos = _stepCenter(token.color, token.step);
+    board.add(TokenBurstComponent(position: pos, color: token.color.color));
+  }
+
   Iterable<Token> _allTokens() => tokens.values.expand((l) => l);
 
   void _highlight(List<Token> movable) {
@@ -400,6 +425,7 @@ class LudoGame extends FlameGame {
         for (final p in players)
           p: tokens[p]!.where((t) => t.isFinished).length,
       },
+      ranking: List.unmodifiable(ranking),
     );
   }
 }

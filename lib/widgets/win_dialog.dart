@@ -8,9 +8,17 @@ import '../l10n/strings.dart';
 import 'glossy_button.dart';
 
 class WinDialog extends StatefulWidget {
-  const WinDialog({super.key, required this.winner, required this.onMenu});
+  const WinDialog({
+    super.key,
+    required this.winner,
+    required this.ranking,
+    required this.nameOf,
+    required this.onMenu,
+  });
 
   final PlayerColor winner;
+  final List<PlayerColor> ranking;
+  final String Function(PlayerColor) nameOf;
   final VoidCallback onMenu;
 
   @override
@@ -108,6 +116,8 @@ class _WinDialogState extends State<WinDialog> with TickerProviderStateMixin {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            const _RankBadge(rank: 1, size: 22),
+                            const SizedBox(width: 6),
                             Container(
                               width: 14,
                               height: 14,
@@ -122,7 +132,7 @@ class _WinDialogState extends State<WinDialog> with TickerProviderStateMixin {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              tr.wins(widget.winner.label),
+                              tr.wins(widget.nameOf(widget.winner)),
                               style: const TextStyle(
                                 color: Color(0xFF3A4750),
                                 fontSize: 16,
@@ -131,6 +141,13 @@ class _WinDialogState extends State<WinDialog> with TickerProviderStateMixin {
                             ),
                           ],
                         ),
+                        if (widget.ranking.length > 1) ...[
+                          const SizedBox(height: 18),
+                          _RankingList(
+                            ranking: widget.ranking,
+                            nameOf: widget.nameOf,
+                          ),
+                        ],
                         const SizedBox(height: 28),
                         SizedBox(
                           width: double.infinity,
@@ -192,6 +209,108 @@ class _WinDialogState extends State<WinDialog> with TickerProviderStateMixin {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _RankingList extends StatelessWidget {
+  const _RankingList({required this.ranking, required this.nameOf});
+
+  final List<PlayerColor> ranking;
+  final String Function(PlayerColor) nameOf;
+
+  @override
+  Widget build(BuildContext context) {
+    final rest = ranking.skip(1).toList();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF3F7),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rest.length; i++)
+            Padding(
+              padding: EdgeInsets.only(bottom: i == rest.length - 1 ? 0 : 6),
+              child: Row(
+                children: [
+                  _RankBadge(rank: i + 2, size: 20),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: rest[i].color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      nameOf(rest[i]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF3A4750),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RankBadge extends StatelessWidget {
+  const _RankBadge({required this.rank, required this.size});
+
+  final int rank;
+  final double size;
+
+  static const _colors = {
+    1: [Color(0xFFFFD700), Color(0xFFFB8C00)],
+    2: [Color(0xFFE0E0E0), Color(0xFF9E9E9E)],
+    3: [Color(0xFFD7A16B), Color(0xFF8D5524)],
+    4: [Color(0xFF90A4AE), Color(0xFF546E7A)],
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = _colors[rank] ?? _colors[4]!;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: colors.last.withValues(alpha: 0.5),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$rank',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size * 0.5,
+          fontWeight: FontWeight.w900,
+          height: 1,
+        ),
+      ),
     );
   }
 }

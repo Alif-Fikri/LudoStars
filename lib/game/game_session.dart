@@ -13,10 +13,15 @@ class GameSession {
   LudoGame startNew({
     required List<PlayerColor> players,
     required Set<PlayerColor> aiPlayers,
+    Map<PlayerColor, String> playerNames = const {},
   }) {
     _game?.abandon();
     _game?.uiState.dispose();
-    _game = LudoGame(players: players, aiPlayers: aiPlayers);
+    _game = LudoGame(
+      players: players,
+      aiPlayers: aiPlayers,
+      playerNames: playerNames,
+    );
     return _game!;
   }
 
