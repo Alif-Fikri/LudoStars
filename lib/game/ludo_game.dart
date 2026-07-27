@@ -47,6 +47,7 @@ class LudoGame extends FlameGame {
 
   static const int _aiThinkMs = 850;
   static const int _moveCellMs = 270;
+  static const int _autoMoveDelayMs = 900;
 
   final math.Random _rng = math.Random();
   bool _busy = false;
@@ -142,10 +143,11 @@ class LudoGame extends FlameGame {
     }
 
     if (!isAiTurn && movable.length == 1) {
-      _clearHighlights();
+      final onlyMove = movable.first;
+      _highlight(movable);
       _message = tr.rolledTap(dice);
       _publish();
-      _moveToken(movable.first);
+      _delayMs(_autoMoveDelayMs, () => _autoMoveIfStillPending(onlyMove));
       return;
     }
 
@@ -167,6 +169,12 @@ class LudoGame extends FlameGame {
     _clearHighlights();
     _message = tr.freeReroll(nameOf(currentPlayer));
     _publish();
+  }
+
+  void _autoMoveIfStillPending(Token token) {
+    if (phase != GamePhase.action || _busy || isAiTurn) return;
+    if (!_movableTokens().contains(token)) return;
+    _moveToken(token);
   }
 
   void handleTapAt(double x, double y) {
