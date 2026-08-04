@@ -5,6 +5,8 @@ import 'package:flutter/scheduler.dart';
 
 import '../billing/purchase_manager.dart';
 
+const bool kShowRemoveAdsButton = false;
+
 class RemoveAdsButton extends StatelessWidget {
   const RemoveAdsButton({super.key, required this.onTap});
 
@@ -12,6 +14,7 @@ class RemoveAdsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!kShowRemoveAdsButton) return const SizedBox.shrink();
     return ValueListenableBuilder<bool>(
       valueListenable: PurchaseManager.instance.adsRemoved,
       builder: (context, adsRemoved, _) {
@@ -65,8 +68,7 @@ class _PromoButtonState extends State<_PromoButton>
     return math.sin(local * math.pi * 4) * 0.17 * (1 - local);
   }
 
-  double get _breath =>
-      1 + 0.045 * math.sin(_t * 2 * math.pi / _breathPeriod);
+  double get _breath => 1 + 0.045 * math.sin(_t * 2 * math.pi / _breathPeriod);
 
   @override
   Widget build(BuildContext context) {
@@ -151,5 +153,4 @@ class _PromoButtonState extends State<_PromoButton>
       ),
     );
   }
-
 }
