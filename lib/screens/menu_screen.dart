@@ -10,6 +10,8 @@ import '../l10n/app_lang.dart';
 import '../l10n/strings.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/glossy_button.dart';
+import '../widgets/remove_ads_button.dart';
+import '../widgets/remove_ads_dialog.dart';
 import '../widgets/settings_dialog.dart';
 import 'game_screen.dart';
 
@@ -134,7 +136,14 @@ class _MenuScreenState extends State<MenuScreen> {
               children: [
                 Align(
                   alignment: Alignment.topRight,
-                  child: _SettingsButton(onTap: () => showSettings(context)),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _SettingsButton(onTap: () => showSettings(context)),
+                      RemoveAdsButton(onTap: () => showRemoveAds(context)),
+                    ],
+                  ),
                 ),
                 Center(
                   child: FittedBox(
