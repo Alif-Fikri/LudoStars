@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../billing/purchase_manager.dart';
-import '../l10n/strings.dart';
 
 class RemoveAdsButton extends StatelessWidget {
   const RemoveAdsButton({super.key, required this.onTap});
@@ -72,36 +71,28 @@ class _PromoButtonState extends State<_PromoButton>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 12, top: 2),
-      child: Column(
-        children: [
-          GestureDetector(
-            onTapDown: (_) => setState(() => _down = true),
-            onTapCancel: () => setState(() => _down = false),
-            onTapUp: (_) {
-              setState(() => _down = false);
-              widget.onTap();
-            },
-            child: SizedBox(
-              width: _size + _ringSpan,
-              height: _size + _ringSpan,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  for (var i = 0; i < 2; i++) _ring(i * 0.5),
-                  Transform.scale(
-                    scale: (_down ? 0.92 : 1) * _breath,
-                    child: Transform.rotate(angle: _wiggle, child: _core()),
-                  ),
-                ],
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _down = true),
+        onTapCancel: () => setState(() => _down = false),
+        onTapUp: (_) {
+          setState(() => _down = false);
+          widget.onTap();
+        },
+        child: SizedBox(
+          width: _size + _ringSpan,
+          height: _size + _ringSpan,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              for (var i = 0; i < 2; i++) _ring(i * 0.5),
+              Transform.scale(
+                scale: (_down ? 0.92 : 1) * _breath,
+                child: Transform.rotate(angle: _wiggle, child: _core()),
               ),
-            ),
+            ],
           ),
-          Transform.translate(
-            offset: const Offset(0, -2),
-            child: _label(),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -161,22 +152,4 @@ class _PromoButtonState extends State<_PromoButton>
     );
   }
 
-  Widget _label() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        tr.removeAds,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 9.5,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.3,
-        ),
-      ),
-    );
-  }
 }

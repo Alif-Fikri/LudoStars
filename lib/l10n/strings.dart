@@ -41,9 +41,9 @@ class S {
       id ? 'Tanpa banner iklan' : 'No banner ads';
   String get removeAdsPerkInterstitial =>
       id ? 'Tanpa iklan sela antar permainan' : 'No ads between games';
-  String get removeAdsPerkReroll => id
-      ? 'Lempar ulang tanpa tonton iklan'
-      : 'Re-roll without watching ads';
+  String get removeAdsPerkForever => id
+      ? 'Berlaku selamanya di akun kamu'
+      : 'Yours forever, on any device';
   String get removeAdsPerkSupport =>
       id ? 'Dukung pengembangan game ini' : 'Support the developer';
   String get removeAdsOneTime =>

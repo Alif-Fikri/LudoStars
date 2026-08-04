@@ -138,7 +138,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   alignment: Alignment.topRight,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       _SettingsButton(onTap: () => showSettings(context)),
                       RemoveAdsButton(onTap: () => showRemoveAds(context)),

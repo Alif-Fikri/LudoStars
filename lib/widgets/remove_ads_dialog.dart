@@ -167,7 +167,7 @@ class _RemoveAdsDialogState extends State<RemoveAdsDialog> {
             children: [
               _perk(Icons.block_rounded, tr.removeAdsPerkBanner),
               _perk(Icons.hourglass_disabled_rounded, tr.removeAdsPerkInterstitial),
-              _perk(Icons.casino_rounded, tr.removeAdsPerkReroll),
+              _perk(Icons.devices_rounded, tr.removeAdsPerkForever),
               _perk(Icons.favorite_rounded, tr.removeAdsPerkSupport),
               const SizedBox(height: 18),
               Text(
