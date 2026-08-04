@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 
 import 'ads/ad_manager.dart';
 import 'audio/audio_controller.dart';
+import 'billing/purchase_manager.dart';
 import 'screens/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+  await PurchaseManager.instance.init();
   AdManager.instance.init();
   await AudioController.instance.init();
   AudioController.instance.startMusic();

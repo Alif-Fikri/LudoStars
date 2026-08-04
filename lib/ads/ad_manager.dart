@@ -3,9 +3,15 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../billing/purchase_manager.dart';
+
 class AdManager {
   AdManager._();
   static final AdManager instance = AdManager._();
+
+  bool get _adsRemoved => PurchaseManager.instance.adsRemoved.value;
+
+  bool get adsEnabled => supported && !_adsRemoved;
 
   static String get _interstitialUnitId => Platform.isAndroid
       ? 'ca-app-pub-3940256099942544/1033173712'
@@ -32,6 +38,7 @@ class AdManager {
     if (!supported || _initialized) return;
     _initialized = true;
     await MobileAds.instance.initialize();
+    if (_adsRemoved) return;
     _loadInterstitial();
     _loadRewarded();
   }
@@ -62,7 +69,7 @@ class AdManager {
 
   void showInterstitial({VoidCallback? onDismissed}) {
     final ad = _interstitial;
-    if (!supported || ad == null) {
+    if (!supported || _adsRemoved || ad == null) {
       onDismissed?.call();
       return;
     }
@@ -85,6 +92,10 @@ class AdManager {
   }
 
   void showRewarded({required VoidCallback onReward}) {
+    if (_adsRemoved) {
+      onReward();
+      return;
+    }
     final ad = _rewarded;
     if (!supported || ad == null) {
       onReward();

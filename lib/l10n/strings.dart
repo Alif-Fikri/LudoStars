@@ -34,6 +34,40 @@ class S {
   String get menu => 'Menu';
   String get playAgain => id ? 'Main Lagi' : 'Play Again';
 
+  String get removeAds => id ? 'Hapus Iklan' : 'Remove Ads';
+  String get removeAdsSubtitle =>
+      id ? 'Bebas iklan selamanya' : 'Ad-free forever';
+  String get removeAdsPerkBanner =>
+      id ? 'Tanpa banner iklan' : 'No banner ads';
+  String get removeAdsPerkInterstitial =>
+      id ? 'Tanpa iklan sela antar permainan' : 'No ads between games';
+  String get removeAdsPerkReroll => id
+      ? 'Lempar ulang tanpa tonton iklan'
+      : 'Re-roll without watching ads';
+  String get removeAdsPerkSupport =>
+      id ? 'Dukung pengembangan game ini' : 'Support the developer';
+  String get removeAdsOneTime =>
+      id ? 'Sekali bayar, bukan langganan' : 'One-time payment, not a subscription';
+  String get buyNow => id ? 'BELI SEKARANG' : 'BUY NOW';
+  String get restorePurchase => id ? 'Pulihkan pembelian' : 'Restore purchase';
+  String get adsRemovedTitle => id ? 'Iklan sudah hilang!' : 'Ads are gone!';
+  String get adsRemovedBody => id
+      ? 'Terima kasih sudah mendukung. Selamat main tanpa gangguan!'
+      : 'Thanks for the support. Enjoy the uninterrupted game!';
+  String get purchaseRestored =>
+      id ? 'Pembelian berhasil dipulihkan.' : 'Purchase restored.';
+  String get purchaseNothingToRestore => id
+      ? 'Tidak ada pembelian yang bisa dipulihkan.'
+      : 'No purchase found to restore.';
+  String get purchaseCanceled =>
+      id ? 'Pembelian dibatalkan.' : 'Purchase canceled.';
+  String get purchaseFailed => id
+      ? 'Pembelian gagal. Coba lagi nanti.'
+      : 'Purchase failed. Please try again later.';
+  String get storeUnavailable => id
+      ? 'Toko tidak tersedia di perangkat ini.'
+      : 'Store is unavailable on this device.';
+
   String get settings => id ? 'Pengaturan' : 'Settings';
   String get language => id ? 'Bahasa' : 'Language';
   String get music => id ? 'Musik' : 'Music';

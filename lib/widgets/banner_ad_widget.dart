@@ -2,15 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../ads/ad_manager.dart';
+import '../billing/purchase_manager.dart';
 
-class BannerAdWidget extends StatefulWidget {
+class BannerAdWidget extends StatelessWidget {
   const BannerAdWidget({super.key});
 
   @override
-  State<BannerAdWidget> createState() => _BannerAdWidgetState();
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: PurchaseManager.instance.adsRemoved,
+      builder: (context, adsRemoved, _) {
+        if (adsRemoved || !AdManager.instance.supported) {
+          return const SizedBox.shrink();
+        }
+        return const _Banner();
+      },
+    );
+  }
 }
 
-class _BannerAdWidgetState extends State<BannerAdWidget> {
+class _Banner extends StatefulWidget {
+  const _Banner();
+
+  @override
+  State<_Banner> createState() => _BannerState();
+}
+
+class _BannerState extends State<_Banner> {
   BannerAd? _ad;
   bool _loaded = false;
 
@@ -21,7 +39,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   }
 
   void _load() {
-    if (!AdManager.instance.supported) return;
+    if (!AdManager.instance.adsEnabled) return;
     final ad = BannerAd(
       size: AdSize.banner,
       adUnitId: AdManager.bannerUnitId,
@@ -45,7 +63,6 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!AdManager.instance.supported) return const SizedBox.shrink();
     return SizedBox(
       height: AdSize.banner.height.toDouble(),
       child: (_loaded && _ad != null)
