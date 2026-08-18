@@ -9,9 +9,12 @@ class AdManager {
   AdManager._();
   static final AdManager instance = AdManager._();
 
+  /// Kill switch for the whole ads feature (interstitial + rewarded + banner).
+  static const bool adsFeatureEnabled = false;
+
   bool get _adsRemoved => PurchaseManager.instance.adsRemoved.value;
 
-  bool get adsEnabled => supported && !_adsRemoved;
+  bool get adsEnabled => adsFeatureEnabled && supported && !_adsRemoved;
 
   static String get _interstitialUnitId => Platform.isAndroid
       ? 'ca-app-pub-3940256099942544/1033173712'
@@ -35,7 +38,7 @@ class AdManager {
           defaultTargetPlatform == TargetPlatform.iOS);
 
   Future<void> init() async {
-    if (!supported || _initialized) return;
+    if (!adsFeatureEnabled || !supported || _initialized) return;
     _initialized = true;
     await MobileAds.instance.initialize();
     if (_adsRemoved) return;
@@ -69,7 +72,7 @@ class AdManager {
 
   void showInterstitial({VoidCallback? onDismissed}) {
     final ad = _interstitial;
-    if (!supported || _adsRemoved || ad == null) {
+    if (!adsEnabled || ad == null) {
       onDismissed?.call();
       return;
     }
@@ -92,14 +95,14 @@ class AdManager {
   }
 
   void showRewarded({required VoidCallback onReward}) {
-    if (_adsRemoved) {
+    if (!adsEnabled) {
       onReward();
       return;
     }
     final ad = _rewarded;
-    if (!supported || ad == null) {
+    if (ad == null) {
       onReward();
-      if (supported) _loadRewarded();
+      _loadRewarded();
       return;
     }
     var earned = false;

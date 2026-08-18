@@ -2,13 +2,11 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../ads/ad_manager.dart';
-import '../billing/purchase_manager.dart';
 import '../game/game_session.dart';
 import '../game/ludo_constants.dart';
 import '../game/ludo_game.dart';
 import '../game/ludo_models.dart';
 import '../l10n/strings.dart';
-import '../widgets/banner_ad_widget.dart';
 import '../widgets/dice_widget.dart';
 import '../widgets/glossy_button.dart';
 import '../widgets/win_dialog.dart';
@@ -63,10 +61,6 @@ class _GameScreenState extends State<GameScreen> {
         ),
       ),
     );
-  }
-
-  void _onReroll() {
-    AdManager.instance.showRewarded(onReward: _game.applyReroll);
   }
 
   @override
@@ -126,11 +120,7 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   ),
                   if (state != null)
-                    _ControlPanel(
-                      state: state,
-                      onRoll: _game.rollDice,
-                      onReroll: _onReroll,
-                    ),
+                    _ControlPanel(state: state, onRoll: _game.rollDice),
                 ],
               );
             },
@@ -329,15 +319,10 @@ class _TurnBanner extends StatelessWidget {
 }
 
 class _ControlPanel extends StatelessWidget {
-  const _ControlPanel({
-    required this.state,
-    required this.onRoll,
-    required this.onReroll,
-  });
+  const _ControlPanel({required this.state, required this.onRoll});
 
   final LudoUiState state;
   final VoidCallback onRoll;
-  final VoidCallback onReroll;
 
   @override
   Widget build(BuildContext context) {
@@ -367,34 +352,6 @@ class _ControlPanel extends StatelessWidget {
               Expanded(child: _primaryAction(canRoll)),
             ],
           ),
-          ValueListenableBuilder<bool>(
-            valueListenable: PurchaseManager.instance.adsRemoved,
-            builder: (context, adsRemoved, _) {
-              if (adsRemoved) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(top: 18),
-                child: AnimatedOpacity(
-                  opacity: state.canReroll ? 1 : 0.4,
-                  duration: const Duration(milliseconds: 200),
-                  child: IgnorePointer(
-                    ignoring: !state.canReroll,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: GlossyButton(
-                        color: const Color(0xFFFFB300),
-                        icon: Icons.ondemand_video,
-                        label: tr.watchAdReroll,
-                        vertical: 14,
-                        onTap: onReroll,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 18),
-          const Center(child: BannerAdWidget()),
         ],
       ),
     );
