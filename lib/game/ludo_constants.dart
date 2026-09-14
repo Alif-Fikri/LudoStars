@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_lang.dart';
+import '../l10n/strings.dart';
 
 enum PlayerColor { red, green, yellow, blue }
 
@@ -32,16 +32,15 @@ extension PlayerColorX on PlayerColor {
   }
 
   String get label {
-    final id = AppLang.instance.isId;
     switch (this) {
       case PlayerColor.red:
-        return id ? 'Merah' : 'Red';
+        return tr.colorRed;
       case PlayerColor.green:
-        return id ? 'Hijau' : 'Green';
+        return tr.colorGreen;
       case PlayerColor.yellow:
-        return id ? 'Kuning' : 'Yellow';
+        return tr.colorYellow;
       case PlayerColor.blue:
-        return id ? 'Biru' : 'Blue';
+        return tr.colorBlue;
     }
   }
 

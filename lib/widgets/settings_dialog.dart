@@ -13,16 +13,18 @@ Future<void> showSettings(BuildContext context) {
   );
 }
 
-class _SettingsDialog extends StatefulWidget {
+class _SettingsDialog extends StatelessWidget {
   const _SettingsDialog();
 
   @override
-  State<_SettingsDialog> createState() => _SettingsDialogState();
-}
-
-class _SettingsDialogState extends State<_SettingsDialog> {
-  @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: AppLang.instance.code,
+      builder: (context, langCode, _) => _body(context, langCode),
+    );
+  }
+
+  Widget _body(BuildContext context, String langCode) {
     final audio = AudioController.instance;
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -65,30 +67,18 @@ class _SettingsDialogState extends State<_SettingsDialog> {
             ),
             const SizedBox(height: 18),
             _label(tr.language),
-            const SizedBox(height: 8),
-            Row(
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
               children: [
-                Expanded(
-                  child: GlossyButton(
-                    color: AppLang.instance.isId
-                        ? const Color(0xFF607D8B)
-                        : Colors.amber,
-                    label: 'English',
-                    vertical: 12,
-                    onTap: () => setState(() => AppLang.instance.set('en')),
+                for (final lang in AppLang.supported)
+                  _FlagButton(
+                    lang: lang,
+                    selected: langCode == lang.code,
+                    onTap: () => AppLang.instance.set(lang.code),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: GlossyButton(
-                    color: AppLang.instance.isId
-                        ? Colors.amber
-                        : const Color(0xFF607D8B),
-                    label: 'Indonesia',
-                    vertical: 12,
-                    onTap: () => setState(() => AppLang.instance.set('id')),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 18),
@@ -130,7 +120,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
   }
 
   Widget _label(String text) => Align(
-    alignment: Alignment.centerLeft,
+    alignment: AlignmentDirectional.centerStart,
     child: Text(
       text,
       style: const TextStyle(
@@ -140,4 +130,55 @@ class _SettingsDialogState extends State<_SettingsDialog> {
       ),
     ),
   );
+}
+
+class _FlagButton extends StatelessWidget {
+  const _FlagButton({
+    required this.lang,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final LangOption lang;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: lang.label,
+      selected: selected,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          width: 56,
+          height: 54,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected
+                ? Colors.amber.withValues(alpha: 0.28)
+                : Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? const Color(0xFFFFC107)
+                  : Colors.white.withValues(alpha: 0.2),
+              width: selected ? 2.4 : 1.2,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.amber.withValues(alpha: 0.45),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(lang.flag, style: const TextStyle(fontSize: 30)),
+        ),
+      ),
+    );
+  }
 }

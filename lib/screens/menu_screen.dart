@@ -145,58 +145,61 @@ class _MenuScreenState extends State<MenuScreen> {
                     ],
                   ),
                 ),
-                Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const AppLogo(size: 92),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'LUDO',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 46,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 8,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black26,
-                              offset: Offset(0, 3),
-                              blurRadius: 8,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 28),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const AppLogo(size: 92),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'LUDO',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 46,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 8,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black26,
+                                  offset: Offset(0, 3),
+                                  blurRadius: 8,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFC107),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x33000000),
-                              blurRadius: 6,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Text(
-                          'S T A R S',
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 3,
                           ),
-                        ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFC107),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x33000000),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              'S T A R S',
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 3,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
                     ),
                   ),
                 ),
@@ -330,7 +333,7 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   Widget _sectionLabel(String text) => Align(
-    alignment: Alignment.centerLeft,
+    alignment: AlignmentDirectional.centerStart,
     child: Text(
       text.toUpperCase(),
       style: const TextStyle(
@@ -382,9 +385,7 @@ class _FloatingTokensState extends State<_FloatingTokens>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return IgnorePointer(
-      child: Stack(
-        children: [for (final tk in _tokens) _dot(tk, size)],
-      ),
+      child: Stack(children: [for (final tk in _tokens) _dot(tk, size)]),
     );
   }
 
@@ -442,8 +443,8 @@ class _ModeSegment extends StatelessWidget {
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
                 alignment: vsComputer
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
+                    ? AlignmentDirectional.centerStart
+                    : AlignmentDirectional.centerEnd,
                 child: Container(
                   width: segW,
                   decoration: BoxDecoration(
@@ -668,7 +669,7 @@ Future<bool?> _showNameDialog(
                           Container(
                             width: 40,
                             height: 40,
-                            margin: const EdgeInsets.only(right: 12),
+                            margin: const EdgeInsetsDirectional.only(end: 12),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
@@ -695,7 +696,9 @@ Future<bool?> _showNameDialog(
                               controller: controllers[c],
                               maxLength: 14,
                               textInputAction: TextInputAction.next,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                               decoration: InputDecoration(
                                 isDense: true,
                                 counterText: '',
@@ -802,7 +805,10 @@ class _CountSegment extends StatelessWidget {
               AnimatedAlign(
                 duration: const Duration(milliseconds: 260),
                 curve: Curves.easeOutCubic,
-                alignment: Alignment(-1 + index * (2 / (_options.length - 1)), 0),
+                alignment: AlignmentDirectional(
+                  -1 + index * (2 / (_options.length - 1)),
+                  0,
+                ),
                 child: Container(
                   width: segW,
                   decoration: BoxDecoration(

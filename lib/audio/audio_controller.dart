@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 class AudioController {
   AudioController._();
@@ -62,4 +62,22 @@ class AudioController {
   }
 
   void setSfx(bool on) => sfxEnabled.value = on;
+
+  /// Pauses music while the app is not in the foreground, and resumes it only
+  /// if the user had music turned on.
+  Future<void> handleLifecycle(AppLifecycleState state) async {
+    if (!_ready) return;
+    try {
+      if (state != AppLifecycleState.resumed) {
+        if (_music.state == PlayerState.playing) await _music.pause();
+      } else if (musicEnabled.value) {
+        // resume() only works from a paused state; otherwise start from scratch.
+        if (_music.state == PlayerState.paused) {
+          await _music.resume();
+        } else if (_music.state != PlayerState.playing) {
+          await startMusic();
+        }
+      }
+    } catch (_) {}
+  }
 }

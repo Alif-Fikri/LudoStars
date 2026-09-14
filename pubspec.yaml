@@ -50,6 +50,9 @@ dependencies:
   # Local persistence for the unlocked "ads removed" entitlement.
   shared_preferences: ^2.5.5
 
+  # Local key-value storage (language preference).
+  hive_ce_flutter: ^2.3.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
