@@ -17,4 +17,6 @@ class AppStore {
   String? getString(String key) => _box.get(key) as String?;
 
   Future<void> setString(String key, String value) => _box.put(key, value);
+
+  Future<void> remove(String key) => _box.delete(key);
 }

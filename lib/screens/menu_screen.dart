@@ -88,7 +88,7 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   void _continue() {
-    final game = GameSession.instance.game;
+    final game = GameSession.instance.resume();
     if (game != null) _open(game);
   }
 

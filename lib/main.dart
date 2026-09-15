@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'ads/ad_manager.dart';
 import 'audio/audio_controller.dart';
 import 'billing/purchase_manager.dart';
+import 'game/game_session.dart';
 import 'l10n/app_lang.dart';
 import 'screens/splash_screen.dart';
 import 'storage/app_store.dart';
@@ -14,6 +15,7 @@ Future<void> main() async {
 
   await AppStore.instance.init();
   AppLang.instance.init();
+  GameSession.instance.loadSaved();
   await PurchaseManager.instance.init();
   AdManager.instance.init();
   await AudioController.instance.init();

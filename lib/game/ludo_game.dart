@@ -16,11 +16,23 @@ class LudoGame extends FlameGame {
     required this.players,
     this.aiPlayers = const {},
     this.playerNames = const {},
-  }) : assert(players.length >= 2 && players.length <= 4);
+    Map<PlayerColor, List<int>>? restoredSteps,
+    int restoredIndex = 0,
+    List<PlayerColor> restoredRanking = const [],
+    int restoredSixes = 0,
+    bool restoredRerollUsed = false,
+  }) : _restoredSteps = restoredSteps,
+       assert(players.length >= 2 && players.length <= 4) {
+    _currentIndex = restoredIndex.clamp(0, players.length - 1);
+    ranking.addAll(restoredRanking);
+    _consecutiveSixes = restoredSixes;
+    _rerollUsed = restoredRerollUsed;
+  }
 
   final List<PlayerColor> players;
   final Set<PlayerColor> aiPlayers;
   final Map<PlayerColor, String> playerNames;
+  final Map<PlayerColor, List<int>>? _restoredSteps;
 
   String nameOf(PlayerColor color) {
     final custom = playerNames[color]?.trim();
@@ -28,6 +40,11 @@ class LudoGame extends FlameGame {
   }
 
   void Function(List<PlayerColor> ranking)? onGameOver;
+
+  /// Fired whenever the game reaches a resumable point (a turn is about to be
+  /// rolled) and once more with `null` when the game is over and any saved
+  /// state should be discarded.
+  void Function(LudoGame? game)? onCheckpoint;
 
   final ValueNotifier<LudoUiState?> uiState = ValueNotifier(null);
 
@@ -69,7 +86,15 @@ class LudoGame extends FlameGame {
     add(board);
 
     for (final color in players) {
-      final list = List.generate(4, (i) => Token(color: color, index: i));
+      final saved = _restoredSteps?[color];
+      final list = List.generate(
+        4,
+        (i) => Token(
+          color: color,
+          index: i,
+          step: (saved != null && i < saved.length) ? saved[i] : kYardStep,
+        ),
+      );
       tokens[color] = list;
       for (final t in list) {
         final comp = TokenComponent(token: t);
@@ -305,6 +330,7 @@ class LudoGame extends FlameGame {
     AudioController.instance.win();
     _message = tr.wins(nameOf(winner!));
     _busy = false;
+    onCheckpoint?.call(null);
     _publish();
     onGameOver?.call(List.unmodifiable(ranking));
   }
@@ -415,8 +441,29 @@ class LudoGame extends FlameGame {
     });
   }
 
+  /// The state needed to rebuild this game from a turn boundary. Transient
+  /// fields (dice, phase, in-flight animations) are deliberately left out —
+  /// a restored game always resumes at the start of [currentPlayer]'s turn.
+  Map<String, dynamic> toSnapshot() => {
+    'v': 1,
+    'players': [for (final p in players) p.name],
+    'ai': [for (final p in aiPlayers) p.name],
+    'names': {for (final e in playerNames.entries) e.key.name: e.value},
+    'currentIndex': _currentIndex,
+    'tokens': {
+      for (final e in tokens.entries)
+        e.key.name: [for (final t in e.value) t.step],
+    },
+    'ranking': [for (final p in ranking) p.name],
+    'sixes': _consecutiveSixes,
+    'rerollUsed': _rerollUsed,
+  };
+
   void _publish() {
     if (_abandoned) return;
+    // Only checkpoint where a resume is well defined: nothing animating and the
+    // current player has yet to roll.
+    if (phase == GamePhase.roll && !_busy) onCheckpoint?.call(this);
     final movable = phase == GamePhase.action ? _movableTokens() : const [];
     uiState.value = LudoUiState(
       currentPlayer: currentPlayer,
