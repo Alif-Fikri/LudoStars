@@ -9,6 +9,8 @@ void main() {
 
     expect(find.text('LUDO'), findsOneWidget);
     expect(find.text('START'), findsOneWidget);
-    expect(find.widgetWithText(ChoiceChip, '4'), findsOneWidget);
+    for (final count in ['2', '3', '4']) {
+      expect(find.text(count), findsOneWidget);
+    }
   });
 }
