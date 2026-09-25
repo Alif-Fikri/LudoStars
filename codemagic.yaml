@@ -70,8 +70,7 @@ workflows:
     publishing:
       email:
         recipients:
-          # Replace with the address that should receive build results.
-          - CHANGE_ME@example.com
+          - fikritestings@gmail.com
         notify:
           success: true
           failure: true
