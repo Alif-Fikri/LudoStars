@@ -59,9 +59,21 @@ workflows:
         # Prints the fingerprint of whatever actually signed the bundle, so a
         # wrong-key upload is caught here instead of by Play.
         script: |
-          AAB=$(find build -name '*.aab' | head -1)
-          SIG=$(unzip -l "$AAB" | grep -oE 'META-INF/[^ ]+\.(RSA|DSA|EC)' | head -1)
-          unzip -p "$AAB" "$SIG" | keytool -printcert | grep -E 'Owner:|SHA1:'
+          set -e
+          # Only the bundle under outputs/ is signed. An unsigned intermediary
+          # bundle also exists, and searching all of build/ can return it first.
+          AAB=$(find build/app/outputs -name '*.aab' | head -1)
+          if [ -z "$AAB" ]; then
+            echo "No app bundle under build/app/outputs"
+            exit 1
+          fi
+          SIG=$(unzip -l "$AAB" | grep -oE 'META-INF/[^[:space:]]+\.(RSA|DSA|EC)' | head -1)
+          if [ -z "$SIG" ]; then
+            echo "$AAB carries no signature block — it was not signed"
+            exit 1
+          fi
+          echo "Bundle: $AAB"
+          unzip -p "$AAB" "$SIG" | keytool -printcert | grep -E 'Owner:|SHA1:|SHA256:'
     artifacts:
       - build/**/outputs/bundle/**/*.aab
       - build/**/outputs/**/mapping.txt
