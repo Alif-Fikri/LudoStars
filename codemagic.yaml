@@ -26,9 +26,9 @@ workflows:
       flutter: 3.41.7
       java: 17
       android_signing:
-        # Name of the keystore uploaded under Codemagic → Teams/App settings →
-        # Code signing identities. Must match exactly.
-        - ludostars_keystore
+        # Reference name of the keystore uploaded to Codemagic's code signing
+        # identities. Must match what is typed there, character for character.
+        - alchemist-release
     triggering:
       events:
         - tag
